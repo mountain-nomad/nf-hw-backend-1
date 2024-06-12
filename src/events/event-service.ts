@@ -4,7 +4,7 @@ import EventModel, { IEvent } from './models/Event';
 import { Event } from './types/response';
 
 
-
+// decode gwt token from rec.headers.authorization get location from it and find by location
 // this event service instance shows how to create a event, get a event by id, and get all events with in-memory data
 class EventService {
   
@@ -12,8 +12,8 @@ class EventService {
       return await EventModel.findById(id).exec();
     }
 
-    async getEvents(): Promise<IEvent[]> {
-      return await EventModel.find().exec(); 
+    async getEvents(location: string): Promise<IEvent[]> {
+      return await EventModel.find({location:location}).exec(); 
     }
 
     async createEvent(createEventDto: CreateEventDto): Promise<IEvent> {

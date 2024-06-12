@@ -9,17 +9,18 @@ import RefreshTokenModel from './models/RefreshToken';
 dotenv.config();
 
 class AuthService {
-  private readonly jwtSecret = process.env.JWT_SECRET!;
-  private readonly jwtRefreshSecret = process.env.JWT_REFRESH_SECRET!;
+  private readonly jwtSecret = 'ui';
+  private readonly jwtRefreshSecret = 'muk';
 
   async registerUser(createUserDto: CreateUserDto): Promise<IUser> {
-    const { email, password, username } = createUserDto;
+    const { email, password, username, location } = createUserDto;
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = new UserModel({
       email,
       username,
       password: hashedPassword,
+      location,
     });
 
     await newUser.save();
@@ -36,18 +37,18 @@ class AuthService {
     const accessToken = this.generateJwt(user);
     const refreshToken = this.generateRefreshToken(user);
 
-    const refreshTokenDoc = new RefreshTokenModel({ token: refreshToken, user: user._id });
+    const refreshTokenDoc = new RefreshTokenModel({ token: refreshToken, user: user._id, location: user.location });
     await refreshTokenDoc.save();
 
     return { user, accessToken, refreshToken };
   }
 
   private generateJwt(user: IUser): string {
-    return jwt.sign({ id: user._id, email: user.email }, this.jwtSecret, { expiresIn: '1h' });
+    return jwt.sign({ id: user._id, email: user.email, location: user.location }, this.jwtSecret, { expiresIn: '1h' });
   }
 
   private generateRefreshToken(user: IUser): string {
-    return jwt.sign({ id: user._id, email: user.email }, this.jwtRefreshSecret, { expiresIn: '7d' });
+    return jwt.sign({ id: user._id, email: user.email, location: user.location }, this.jwtRefreshSecret, { expiresIn: '7d' });
   }
 
   verifyJwt(token: string): any {
@@ -76,7 +77,7 @@ class AuthService {
     const newAccessToken = this.generateJwt(user);
     const newRefreshToken = this.generateRefreshToken(user);
 
-    const refreshTokenDoc = new RefreshTokenModel({ token: newRefreshToken, user: user._id });
+    const refreshTokenDoc = new RefreshTokenModel({ token: newRefreshToken, user: user._id, location: user.location });
     await refreshTokenDoc.save();
 
     await RefreshTokenModel.deleteOne({ token: oldToken });
